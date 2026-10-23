@@ -41,6 +41,7 @@ pip install leaklens-ml
 pip install -e “.[dev,app]”
 leaklens train.csv --target label --test test.csv --time date
 leaklens --scan notebooks/ --explain   # prints a suggested fix under each finding
+leaklens --scan notebooks/ --llm   # explicitly sends finding details to local Ollama for an explanation and patch suggestion
 leaklens --scan . --sarif leaklens.sarif   # for GitHub code scanning
 leaklens train.csv --target label --test test.csv --group patient_id
 leaklens train.parquet --target label --fail-under 80   # Parquet input (pip install leaklens-ml[parquet]); CI gate on trust score
