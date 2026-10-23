@@ -114,6 +114,6 @@ def main(argv=None) -> int:
         if not fs:
             print("No leakage found.")
         if res is not None:
-            print(f"\\nArena ranked by {res.attrs['primary']} (auto-dropped: {', '.join(map(str, res.attrs['dropped'])) or 'none'})")
+            print(f"\nArena ranked by {res.attrs['primary']} (auto-dropped: {', '.join(map(str, res.attrs['dropped'])) or 'none'})")
             print(res.round(4).to_string(index=False))
     return 1 if any(f.severity == "high" for f in fs) or (a.fail_under is not None and rep["trust_score"] < a.fail_under) else 0
