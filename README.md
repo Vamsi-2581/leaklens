@@ -50,6 +50,27 @@ leaklens demo.csv --target is_fraud --arena
 mlflow ui --backend-store-uri sqlite:///mlflow.db
 
 
+## Optional LLM explanations
+
+LLM explanations are disabled by default. With `--llm`, LeakLens sends only each finding's severity, kind, column, and diagnostic detail to the selected provider; it does not send the scanned source files or dataset rows. The default provider is local Ollama:
+
+```sh
+ollama pull qwen2.5:7b
+leaklens --scan notebooks/ --llm
+```
+
+To use an OpenAI-compatible API, select it explicitly and configure its endpoint and key (the request then leaves your machine):
+
+```sh
+export LEAKLENS_LLM_BASE_URL=https://api.example.com/v1
+export LEAKLENS_LLM_API_KEY=...
+export LEAKLENS_LLM_MODEL=your-model
+leaklens --scan notebooks/ --llm --llm-provider openai-compatible
+```
+
+You can also pass `--llm-base-url` and `--llm-model` on the command line. The API key is read only from `LEAKLENS_LLM_API_KEY`.
+
+
 ## Model arena
 Auto-drops leaking and ID columns, then trains linear, gradient-boosted tree and neural-net models inside leak-safe pipelines (imputation, scaling and encoding are fitted on training data only). Runs are tracked in local MLflow (SQLite) and the winner is saved to `models/best.joblib`. Add `--time COL` for a temporal split.
 
