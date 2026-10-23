@@ -18,8 +18,9 @@ class ExplanationProvider(Protocol):
 def _prompt(finding) -> str:
     return (
         "Explain this machine-learning data leakage finding in plain language, "
-        "then suggest a concise remediation. Be specific about what is known, "
-        "and do not invent source-code context.\n\n"
+        "then suggest a concise remediation and a minimal illustrative patch or code change. "
+        "Be specific about what is known, and do not invent source-code context. "
+        "The patch is a suggestion and may need adaptation to the user's code.\n\n"
         f"Severity: {finding.severity}\n"
         f"Finding: {finding.kind}\n"
         f"Column: {finding.column}\n"
