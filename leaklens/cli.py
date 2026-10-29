@@ -6,7 +6,7 @@ import os
 import sys
 
 import pandas as pd
-from . import __version__
+from . import __version__, llm
 from .audit import audit
 from .leakage import group_overlap, group_risk, scan, score, split_overlap, temporal_overlap
 from .fixes import advice
@@ -49,6 +49,11 @@ def main(argv=None) -> int:
     p.add_argument("--tracking-uri", default="sqlite:///mlflow.db")
     p.add_argument("--json", action="store_true")
     p.add_argument("--explain", action="store_true", help="print a suggested fix under each finding")
+    p.add_argument("--llm", action="store_true", help="ask the configured provider to explain findings")
+    p.add_argument("--llm-provider", choices=("ollama", "openai-compatible"), default="ollama")
+    p.add_argument("--llm-base-url", help="LLM provider base URL")
+    p.add_argument("--llm-model", help="LLM model name")
+    p.add_argument("--llm-max-findings", type=int, default=10, help="maximum findings to explain (default: 10)")
     p.add_argument("--sarif", help="write SARIF 2.1.0 for GitHub code scanning")
     p.add_argument("--html", help="write a shareable single-file HTML report")
     p.add_argument("--badge", help="write a shields.io endpoint JSON with the trust score")
@@ -90,7 +95,25 @@ def main(argv=None) -> int:
     if a.scan:
         for s in a.scan:
             fs += scan_path(s)
+    explanations = None
+    if a.llm:
+        try:
+            provider = llm.create_provider(a.llm_provider, a.llm_base_url, a.llm_model)
+            explanations = llm.explain_findings(fs, provider, a.llm_max_findings)
+        except llm.LLMError as exc:
+            p.error(str(exc))
+        if len(fs) > a.llm_max_findings:
+            print(
+                f"LLM explanations skipped {len(fs) - a.llm_max_findings} finding(s) "
+                f"after the {a.llm_max_findings}-finding limit.",
+                file=sys.stderr,
+            )
+
     rep = {"trust_score": score(fs), **rep, "findings": [f.to_dict() for f in fs]}
+    if explanations is not None:
+        for finding_report, explanation in zip(rep["findings"], explanations):
+            if explanation is not None:
+                finding_report["llm_explanation"] = explanation
     if a.sarif:
         from .sarif import to_sarif
         with open(a.sarif, "w", encoding="utf-8") as fh:
