@@ -59,6 +59,8 @@ def main(argv=None) -> int:
     p.add_argument("--badge", help="write a shields.io endpoint JSON with the trust score")
     p.add_argument("--fail-under", type=float, help="exit with code 1 if trust score is below N")
     a = p.parse_args(argv)
+    if a.llm and a.llm_max_findings < 1:
+        p.error("--llm-max-findings must be at least 1")
     if not a.train and not a.scan:
         p.error("give a CSV and/or --scan PATH")
     if a.train and not a.target:
@@ -131,8 +133,10 @@ def main(argv=None) -> int:
         print(json.dumps(rep, indent=2))
     else:
         print(f"LeakLens trust score: {rep['trust_score']}/100")
-        for f in fs:
+        for index, f in enumerate(fs):
             print(f"{_severity_label(f.severity)} {f.kind} :: {f.column} :: {f.detail}")
+            if explanations is not None and explanations[index] is not None:
+                print(f"    LLM: {explanations[index]}")
             if a.explain and advice(f.kind):
                 print(f"    fix: {advice(f.kind)}")
         if fs:
