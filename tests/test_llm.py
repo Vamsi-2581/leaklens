@@ -136,7 +136,7 @@ def test_openai_provider_refuses_redirects_without_following_them(monkeypatch):
 
     class FakeOpener:
         def __init__(self, handlers):
-            self.handler = handlers[0]
+            self.handler = handlers[0]()
 
         def open(self, request, timeout):
             redirects.append(
